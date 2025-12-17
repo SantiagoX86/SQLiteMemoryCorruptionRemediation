@@ -16,20 +16,27 @@ Vulnerability Management project in which I used the Tenable Vulnerability Manag
 
 # Table of Contents
 
-- [Initial Vulnerability Scan of Azure VM LogNPacific](#initial-vulnerability-scan-of-azure-VM-lognpacific3286)
-- [Application of Pre-built Remediation Scripts](#application-of-pre-built-remediation-scripts)
-- [Policy Finalization and Senior Leadership Sign-Off](#step-3-policy-finalization-and-senior-leadership-sign-off)
-- [Mock Meeting: Initial Scan Permission (Server Team)](#step-4-mock-meeting-initial-scan-permission-server-team)
-- [Initial Scan of Server Team Assets](#step-5-initial-scan-of-server-team-assets)
-- [Vulnerability Assessment and Prioritization](#step-6-vulnerability-assessment-and-prioritization)
-- [Distributing Remediations to Remediation Teams](#step-7-distributing-remediations-to-remediation-teams)
-- [Mock Meeting: Post-Initial Discovery Scan (Server Team)](#step-8-mock-meeting-post-initial-discovery-scan-server-team)
-- [Mock CAB Meeting: Implementing Remediations](#step-9-mock-cab-meeting-implementing-remediations)
-- [Remediation Round 1: Outdated Wireshark Removal](#remediation-round-1-outdated-wireshark-removal)
-- [Remediation Round 2: Insecure Protocols & Ciphers](#remediation-round-2-insecure-protocols--ciphers)
-- [Remediation Round 3: Guest Account Group Membership](#remediation-round-3-guest-account-group-membership)
-- [Remediation Round 4: Windows OS Updates](#remediation-round-4-windows-os-updates)
-- [First Cycle Remediation Effort Summary](#first-cycle-remediation-effort-summary)
+- [VulnerabilityManagement](#vulnerabilitymanagement)
+- [Technology Utilized](#technology-utilized)
+- [Table of Contents](#table-of-contents)
+    - [Initial Vulnerability Scan of Azure VM LogNPacific3286](#initial-vulnerability-scan-of-azure-vm-lognpacific3286)
+    - [Traige and Prioritization](#traige-and-prioritization)
+    - [Stakeholder Consultation](#stakeholder-consultation)
+    - [Application of Pre-built Remediation Scripts](#application-of-pre-built-remediation-scripts)
+    - [Secondary Scan Following Application of Remediation Scripts](#secondary-scan-following-application-of-remediation-scripts)
+    - [Step 4) Mock Meeting: Initial Scan Permission (Server Team)](#step-4-mock-meeting-initial-scan-permission-server-team)
+    - [Step 5) Initial Scan of Server Team Assets](#step-5-initial-scan-of-server-team-assets)
+    - [Step 6) Vulnerability Assessment and Prioritization](#step-6-vulnerability-assessment-and-prioritization)
+    - [Step 7) Distributing Remediations to Remediation Teams](#step-7-distributing-remediations-to-remediation-teams)
+    - [Step 8) Mock Meeting: Post-Initial Discovery Scan (Server Team)](#step-8-mock-meeting-post-initial-discovery-scan-server-team)
+    - [Step 9) Mock CAB Meeting: Implementing Remediations](#step-9-mock-cab-meeting-implementing-remediations)
+    - [Step 10 ) Remediation Effort](#step-10--remediation-effort)
+      - [Remediation Round 1: Outdated Wireshark Removal](#remediation-round-1-outdated-wireshark-removal)
+      - [Remediation Round 2: Insecure Protocols \& Ciphers](#remediation-round-2-insecure-protocols--ciphers)
+      - [Remediation Round 3: Guest Account Group Membership](#remediation-round-3-guest-account-group-membership)
+      - [Remediation Round 4: Windows OS Updates](#remediation-round-4-windows-os-updates)
+    - [First Cycle Remediation Effort Summary](#first-cycle-remediation-effort-summary)
+    - [On-going Vulnerability Management (Maintenance Mode)](#on-going-vulnerability-management-maintenance-mode)
 
 ---
 
@@ -39,19 +46,31 @@ In this phase the initial scan was conducted and vulnerabilities were identified
 
 ---
 
-### Application of Pre-built Remediation Scripts
+### Traige and Prioritization
 
-This phase consisted of applying the various scripts that had been identified in the previous phase to automate vulnerability remediation in a way that would be easily applicable at scale.
+This stage consisted of analyzing vulnerabilities in terms of criticality using Tenable platform, assets affected, and ease of remediation based on existence of remediation script as opposed to those for which a script would need to be developed.
 
 ---
 
-### Step 3) Policy Finalization and Senior Leadership Sign-Off
+### Stakeholder Consultation
 
-After gathering feedback from the server team, the policy is revised, addressing aggressive remediation timelines. With final approval from upper management, the policy now guides the program, ensuring compliance and reference for pushback resolution.  
-[Finalized Policy](https://docs.google.com/document/d/1rvueLX_71pOR8ldN9zVW9r_zLzDQxVsnSUtNar8ftdg/edit?usp=drive_link)
-<div style="text-align: center;">
-    <img src="https://github.com/user-attachments/assets/9afcdbc1-0493-4af2-9287-1cb9b8f59b40" alt="image" width="400">
-</div>
+Stakeholders identified, notified of vulnerabilities, consulted on related assets, notified of identified patches to be implemented, and informed of which vulnerabilities would require patch development.
+
+---
+
+### Application of Pre-built Remediation Scripts
+
+After consultation with stakeholders, this step was a role out of applications of the various scripts that had been identified in the previous phase to automate vulnerability remediation in a way that would be easily applicable at scale. Remediation application will vary by vulnerability based on information gathers in Triage and Stakeholder consultation. Significant remediation script application would ideally be conducted in stages as follows:
+- Sandbox stage role out in a synthetic environment
+- Small scale role out on minimal number of least critical assets
+- Small scale role out on minimal number of assets of all criticality levels
+- Full scale role out on all vulnerable assets
+
+---
+
+### Secondary Scan Following Application of Remediation Scripts
+
+Finish this section next
 
 ---
 
