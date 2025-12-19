@@ -1,5 +1,5 @@
 # VulnerabilityManagement
-Vulnerability Management project in which I used the Tenable Vulnerability Management platform to scan VM on an Azure Network, applied pre-built remediation scripts in Powershell, and developed/applied additional scripts to remediate remaining vulnerabilitie
+Vulnerability Management project in which I used the Tenable Vulnerability Management platform to scan VM on an Azure Network, applied pre-built remediation scripts in Powershell, and developed/applied additional scripts to remediate remaining vulnerabilities
 
 ---
 
@@ -10,6 +10,7 @@ Vulnerability Management project in which I used the Tenable Vulnerability Manag
 - Tenable (enterprise vulnerability management platform)
 - Azure Virtual Machines (Nessus scan engine + scan targets)
 - PowerShell & BASH (remediation scripts)
+- ChatGPT (additional remediation script development)
 
 ---
 
@@ -21,9 +22,9 @@ Vulnerability Management project in which I used the Tenable Vulnerability Manag
 - [Table of Contents](#table-of-contents)
     - [Initial Vulnerability Scan of Azure VM LogNPacific3286](#initial-vulnerability-scan-of-azure-vm-lognpacific3286)
     - [Traige and Prioritization](#traige-and-prioritization)
-    - [Stakeholder Consultation](#stakeholder-consultation)
     - [Application of Pre-built Remediation Scripts](#application-of-pre-built-remediation-scripts)
     - [Secondary Scan Following Application of Remediation Scripts](#secondary-scan-following-application-of-remediation-scripts)
+    - [Development of Additional Remediation Scripts](#development-of-additional-remediation-scripts)
     - [Step 4) Mock Meeting: Initial Scan Permission (Server Team)](#step-4-mock-meeting-initial-scan-permission-server-team)
     - [Step 5) Initial Scan of Server Team Assets](#step-5-initial-scan-of-server-team-assets)
     - [Step 6) Vulnerability Assessment and Prioritization](#step-6-vulnerability-assessment-and-prioritization)
@@ -52,15 +53,10 @@ This stage consisted of analyzing vulnerabilities in terms of criticality using 
 
 ---
 
-### Stakeholder Consultation
-
-Stakeholders identified, notified of vulnerabilities, consulted on related assets, notified of identified patches to be implemented, and informed of which vulnerabilities would require patch development.
-
----
-
 ### Application of Pre-built Remediation Scripts
 
-After consultation with stakeholders, this step was a role out of applications of the various scripts that had been identified in the previous phase to automate vulnerability remediation in a way that would be easily applicable at scale. Remediation application will vary by vulnerability based on information gathers in Triage and Stakeholder consultation. Significant remediation script application would ideally be conducted in stages as follows:
+Role out of applications of the various scripts that had been identified in the previous phase to automate vulnerability remediation in a way that would be easily applicable at scale. Remediation application will vary by vulnerability based on information gathered in Triage and after a consultation with stakeholders. Significant remediation script application would ideally be conducted in stages as follows:
+- Roleback developed and put in place
 - Sandbox stage role out in a synthetic environment
 - Small scale role out on minimal number of least critical assets
 - Small scale role out on minimal number of assets of all criticality levels
@@ -70,17 +66,13 @@ After consultation with stakeholders, this step was a role out of applications o
 
 ### Secondary Scan Following Application of Remediation Scripts
 
-Finish this section next
+Following application of existing remediation scripts a scan was conducted to confirm remediation of vulnerabilities. Identification of remaining vulnerabilities was also conducted during this stage for development of remediation automation scripts.
 
 ---
 
-### Step 4) Mock Meeting: Initial Scan Permission (Server Team)
+### Development of Additional Remediation Scripts
 
-The team collaborates with the server team to initiate scheduled credential scans. A compromise is reached to scan a single server first, monitoring resource impact, and using just-in-time Active Directory credentials for secure, controlled access.  
-
-<a href='https://youtu.be/lg068WA4SKM' target="_"><img width="600" alt="image" src="https://github.com/user-attachments/assets/31fe8d0f-636b-475b-8d5a-a2795c183f86"></a>
-
-[YouTube Video: Initial Discovery Scan](https://youtu.be/lg068WA4SKM)
+Through the use of AI, additional remediation scripts were developed including reversal scripts for role back during testing in case remediation scripts have unintended consequnces affecting dependent network assets. Iterative process was used in development in development in which language processing engines were prompted for scripts and scripts were tested i a sandbox environment for execution success and results were observed, documented, and actioned until intended results were achieved. Same process was followed for reversal scripts.
 
 ---
 
