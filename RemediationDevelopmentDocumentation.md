@@ -54,7 +54,14 @@ Run new scripts in sandbox environment to verify proper execution and ability to
 - ChatGPT recommended updating the script identify and log absense of exe and to handle sqlite3.pyd
 - Updated scripts generated
 Updated scripts tested for proper execution in sandbox
-- Scripts still remediating vulnerabilities but failing to generate backup files
+- Scripts still remediating vulnerabilities but failing to generate backup files, likely due to embedded sqlite or non-existence of sqlite3.exe file
+  - Prompted ChatGPT to modify script to detect version of SQLite and record version info in a file for the rollback script to find
+  - Determined that rollback method unable to be created without sqlite3.exe
+  - Decided it would be best to create an initial script to create backups prior to remediation. This script will create backups if possible and inform user if backups were successfully created or not and warn user about executing remediation script if rollback isn't possible.
+Running all three scripts in sandbox to test execution
+- If rollback is not possible in sandbox rollback script will not be able to be fully tested
+- Both scripts 1 and 2 executed correctly
+Run Tenable Scans of VM to ensure remediation was successful
 - 
 
 ---

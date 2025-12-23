@@ -1,208 +1,236 @@
 <#
 .SYNOPSIS
-Remediates SQLite memory corruption vulnerability on Windows 11
-by downloading and deploying the latest SQLite version.
+Installs or remediates SQLite to a secure version.
 
 .DESCRIPTION
-- Downloads the latest SQLite binary from sqlite.org
-- Searches the system for vulnerable SQLite binaries
-- Backs up vulnerable versions
-- Replaces them with a secure version
-- Logs all actions for auditing
+- Downloads the latest secure SQLite tools
+- Replaces vulnerable sqlite3.exe files if found
+- Installs sqlite3.exe if none exist
+- Ensures a secure SQLite binary is present on the system
+- Logs all actions clearly
 
 Must be run as Administrator.
 #>
 
 # ===============================
-# Configuration Section
+# CONFIGURATION
 # ===============================
 
-# Define the minimum safe SQLite version
+# Minimum SQLite version considered secure
 $MinimumSafeVersion = [Version]"3.50.2"
 
-# Directory used to temporarily store downloaded SQLite files
+# Directory used to download and extract SQLite
 $DownloadDir = "C:\Temp\SQLite"
 
-# Directory used to back up vulnerable SQLite binaries
-$BackupDir = "C:\SQLite_Backups"
+# Directory where SQLite will be installed if none exists
+$InstallDir = "C:\Program Files\SQLite"
 
-# Log file location for audit and troubleshooting
+# Log file location
 $LogFile = "C:\Temp\sqlite_remediation.log"
 
-# Official SQLite download URL for Windows 64-bit CLI tools
-# This URL is updated by SQLite to always reference the latest release
+# Official SQLite tools download URL (secure version)
 $SQLiteDownloadUrl = "https://www.sqlite.org/2025/sqlite-tools-win-x64-3510100.zip"
 
-
-# Local path where the downloaded ZIP file will be saved
+# Path to downloaded ZIP file
 $ZipFilePath = "$DownloadDir\sqlite.zip"
 
 # ===============================
-# Helper Functions
+# ENSURE REQUIRED DIRECTORIES EXIST
 # ===============================
 
-# Function to write messages to console and log file
+# Ensure log directory exists
+$LogDir = Split-Path $LogFile -Parent
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+
+# Ensure download directory exists
+New-Item -ItemType Directory -Path $DownloadDir -Force | Out-Null
+
+# Ensure install directory exists
+New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
+
+# ===============================
+# LOGGING FUNCTION (FAIL-SAFE)
+# ===============================
+
 function Write-Log {
     param ([string]$Message)
 
-    # Create a timestamp for log entries
+    # Generate timestamp
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-    # Output message to console and append to log file
-    "$Timestamp - $Message" | Tee-Object -FilePath $LogFile -Append
-}
-
-# Function to determine SQLite version by executing the binary
-function Get-SQLiteVersion {
-    param ([string]$FilePath)
-
     try {
-        # Execute sqlite3.exe with the --version argument
-        $Output = & $FilePath --version 2>$null
-
-        # Extract the version number from the output using regex
-        if ($Output -match "^(\d+\.\d+\.\d+)") {
-            return [Version]$Matches[1]
-        }
+        # Write to console and append to log file
+        "$Timestamp - $Message" | Tee-Object -FilePath $LogFile -Append
     }
     catch {
-        return $null
+        # If logging fails, write to console only
+        Write-Host "$Timestamp - $Message"
     }
 }
 
 # ===============================
-# Script Start
+# START REMEDIATION
 # ===============================
 
-# Log script start
-Write-Log "Starting SQLite vulnerability remediation"
-
-# Ensure the download directory exists
-if (-not (Test-Path $DownloadDir)) {
-    New-Item -ItemType Directory -Path $DownloadDir -Force | Out-Null
-}
-
-# Ensure the backup directory exists
-if (-not (Test-Path $BackupDir)) {
-    New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
-}
+Write-Log "Starting SQLite remediation (install or replace mode)"
 
 # ===============================
-# Download Latest SQLite
+# DOWNLOAD AND EXTRACT SQLITE
 # ===============================
 
-# Log download action
-Write-Log "Downloading latest SQLite package"
-
-# Download the SQLite ZIP file from the official site
+# Download SQLite tools ZIP from official source
 Invoke-WebRequest `
     -Uri $SQLiteDownloadUrl `
     -OutFile $ZipFilePath `
     -UseBasicParsing
 
-# Extract the downloaded ZIP file
+# Extract ZIP contents
 Expand-Archive `
     -Path $ZipFilePath `
     -DestinationPath $DownloadDir `
     -Force
 
-# Locate the sqlite3.exe file in the extracted contents
+# Locate sqlite3.exe in extracted files
 $PatchedSQLite = Get-ChildItem `
     -Path $DownloadDir `
     -Recurse `
     -Filter "sqlite3.exe" |
     Select-Object -First 1
 
-# Verify sqlite3.exe was found
+# Abort if sqlite3.exe was not found
 if (-not $PatchedSQLite) {
-    Write-Log "ERROR: sqlite3.exe not found after extraction"
+    Write-Log "ERROR: sqlite3.exe not found in downloaded package — aborting"
     exit 1
 }
 
-# Determine version of downloaded SQLite
-$DownloadedVersion = Get-SQLiteVersion -FilePath $PatchedSQLite.FullName
+# ===============================
+# FUNCTION TO GET SQLITE VERSION
+# ===============================
 
-# Verify downloaded version is secure
-if ($DownloadedVersion -lt $MinimumSafeVersion) {
-    Write-Log "ERROR: Downloaded SQLite version is still vulnerable"
+function Get-SQLiteVersion {
+    param ([string]$FilePath)
+
+    try {
+        # Execute sqlite3.exe with version flag
+        $Output = & $FilePath --version 2>$null
+
+        # Extract version number
+        if ($Output -match "^(\d+\.\d+\.\d+)") {
+            return [Version]$Matches[1]
+        }
+    }
+    catch {}
+
+    return $null
+}
+
+# ===============================
+# VERIFY PATCHED VERSION
+# ===============================
+
+# Retrieve version of downloaded sqlite3.exe
+$PatchedVersion = Get-SQLiteVersion $PatchedSQLite.FullName
+
+# Abort if patched version is still vulnerable
+if ($PatchedVersion -lt $MinimumSafeVersion) {
+    Write-Log "ERROR: Downloaded SQLite version is still vulnerable — aborting"
     exit 1
 }
 
-Write-Log "Downloaded SQLite version $DownloadedVersion confirmed secure"
+Write-Log "Verified secure SQLite version: $PatchedVersion"
 
 # ===============================
-# Locate Installed SQLite Binaries
+# SEARCH FOR EXISTING SQLITE3.EXE
 # ===============================
 
-# Common directories where SQLite may exist
-$SearchPaths = @(
-    "C:\Program Files",
-    "C:\Program Files (x86)",
-    "C:\Windows",
-    "C:\"
-)
-
-# Search for sqlite3.exe files
-$SQLiteFiles = Get-ChildItem `
-    -Path $SearchPaths `
+# Search entire system for sqlite3.exe
+$ExistingSQLite = Get-ChildItem `
+    -Path "C:\" `
     -Recurse `
-    -Include "sqlite3.exe" `
+    -Filter "sqlite3.exe" `
     -ErrorAction SilentlyContinue
 
+# Track whether replacement occurred
+$Replaced = $false
+
 # ===============================
-# Remediation Loop
+# REPLACE VULNERABLE SQLITE3.EXE
 # ===============================
 
-foreach ($File in $SQLiteFiles) {
+foreach ($Exe in $ExistingSQLite) {
 
-    # Log file discovery
-    Write-Log "Found SQLite binary: $($File.FullName)"
+    # Get installed SQLite version
+    $InstalledVersion = Get-SQLiteVersion $Exe.FullName
 
-    # Determine installed SQLite version
-    $InstalledVersion = Get-SQLiteVersion -FilePath $File.FullName
+    # Skip files that cannot be evaluated
+    if (-not $InstalledVersion) { continue }
 
-    # Skip files where version cannot be determined
-    if (-not $InstalledVersion) {
-        Write-Log "Unable to determine version — skipping"
-        continue
-    }
-
-    Write-Log "Detected SQLite version $InstalledVersion"
-
-    # Check if the version is vulnerable
+    # Replace only vulnerable versions
     if ($InstalledVersion -lt $MinimumSafeVersion) {
 
-        Write-Log "VULNERABLE SQLite version detected"
+        Write-Log "Replacing vulnerable sqlite3.exe at $($Exe.FullName)"
 
-        # Create a timestamped backup filename
-        $BackupFile = Join-Path `
-            $BackupDir `
-            ("sqlite3_" + $InstalledVersion + "_" + (Get-Date -Format "yyyyMMddHHmmss") + ".exe")
-
-        # Backup the vulnerable SQLite binary
-        Copy-Item `
-            -Path $File.FullName `
-            -Destination $BackupFile `
-            -Force
-
-        Write-Log "Backed up vulnerable binary to $BackupFile"
-
-        # Replace the vulnerable binary with the patched version
         Copy-Item `
             -Path $PatchedSQLite.FullName `
-            -Destination $File.FullName `
+            -Destination $Exe.FullName `
             -Force
 
-        Write-Log "Replaced SQLite binary with secure version"
-    }
-    else {
-        Write-Log "SQLite version already secure"
+        Write-Log "Replacement successful"
+
+        $Replaced = $true
     }
 }
 
 # ===============================
-# Script Completion
+# INSTALL SQLITE IF NONE EXIST
 # ===============================
 
-# Log completion
-Write-Log "SQLite remediation completed successfully"
+if (-not $ExistingSQLite -or $ExistingSQLite.Count -eq 0) {
+
+    Write-Log "No sqlite3.exe found on system — performing fresh install"
+
+    # Define install path
+    $InstallPath = Join-Path $InstallDir "sqlite3.exe"
+
+    # Copy patched sqlite3.exe into install directory
+    Copy-Item `
+        -Path $PatchedSQLite.FullName `
+        -Destination $InstallPath `
+        -Force
+
+    Write-Log "SQLite installed at $InstallPath"
+}
+
+# ===============================
+# ENSURE SQLITE IS AVAILABLE VIA PATH
+# ===============================
+
+# Retrieve current system PATH
+$CurrentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+
+# Add install directory to PATH if missing
+if ($CurrentPath -notlike "*$InstallDir*") {
+
+    Write-Log "Adding SQLite install directory to system PATH"
+
+    [Environment]::SetEnvironmentVariable(
+        "Path",
+        "$CurrentPath;$InstallDir",
+        "Machine"
+    )
+}
+
+# ===============================
+# FINAL STATUS LOGGING
+# ===============================
+
+if ($Replaced) {
+    Write-Log "SQLite remediation completed via replacement"
+}
+else {
+    Write-Log "SQLite remediation completed via installation"
+}
+
+Write-Log "SQLite remediation finished successfully"

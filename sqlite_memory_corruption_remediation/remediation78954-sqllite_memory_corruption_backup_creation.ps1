@@ -1,126 +1,189 @@
 <#
 .SYNOPSIS
-Rolls back SQLite remediation by restoring backed-up SQLite binaries.
+Creates backups and a rollback manifest prior to SQLite remediation.
 
 .DESCRIPTION
-- Finds SQLite backup files created during remediation
-- Restores the most recent backup to original locations
-- Logs all rollback actions
-- Designed for Windows 11 enterprise rollback scenarios
+- Searches for vulnerable sqlite3.exe files
+- Creates backups if found
+- Generates a rollback manifest
+- Warns if no backup can be created
+- Hardened to handle missing directories and access errors safely
 
 Must be run as Administrator.
 #>
 
 # ===============================
-# Configuration Section
+# CONFIGURATION
 # ===============================
 
-# Directory where remediation script stored backups
-$BackupDir = "C:\SQLite_Backups"
+# Minimum secure SQLite version
+$MinimumSafeVersion = [Version]"3.50.2"
 
-# Log file for rollback operations
-$LogFile = "C:\Temp\sqlite_rollback.log"
+# Backup directory
+$BackupRoot = "C:\SQLite_Backups"
+
+# Rollback manifest path
+$ManifestPath = "$BackupRoot\rollback_manifest.json"
+
+# Log file path
+$LogFile = "C:\Temp\sqlite_pre_backup.log"
 
 # ===============================
-# Helper Functions
+# ENSURE REQUIRED DIRECTORIES EXIST
 # ===============================
 
-# Function to write messages to both console and log file
+# Extract directory path from log file
+$LogDir = Split-Path $LogFile -Parent
+
+# Create log directory if it does not exist
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+
+# Create backup directory if it does not exist
+if (-not (Test-Path $BackupRoot)) {
+    New-Item -ItemType Directory -Path $BackupRoot -Force | Out-Null
+}
+
+# ===============================
+# LOGGING FUNCTION (FAIL-SAFE)
+# ===============================
+
 function Write-Log {
     param ([string]$Message)
 
-    # Generate timestamp for log entry
+    # Generate timestamp
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-    # Write message to console and append to log file
-    "$Timestamp - $Message" | Tee-Object -FilePath $LogFile -Append
+    try {
+        # Write to console and append to log file
+        "$Timestamp - $Message" | Tee-Object -FilePath $LogFile -Append
+    }
+    catch {
+        # If logging fails, write only to console
+        Write-Host "$Timestamp - $Message"
+    }
 }
 
 # ===============================
-# Script Start
+# INITIALIZATION
 # ===============================
 
-# Log the start of rollback operation
-Write-Log "Starting SQLite rollback process"
+Write-Log "Starting SQLite pre-remediation backup process"
 
-# Verify backup directory exists
-if (-not (Test-Path $BackupDir)) {
-    Write-Log "ERROR: Backup directory not found at $BackupDir"
-    Write-Log "Rollback aborted"
-    exit 1
+# Initialize rollback manifest
+$RollbackManifest = @()
+
+# ===============================
+# FUNCTION TO GET SQLITE VERSION
+# ===============================
+
+function Get-SQLiteVersion {
+    param ([string]$FilePath)
+
+    try {
+        # Execute sqlite3.exe to retrieve version
+        $Output = & $FilePath --version 2>$null
+
+        # Parse version number
+        if ($Output -match "^(\d+\.\d+\.\d+)") {
+            return [Version]$Matches[1]
+        }
+    }
+    catch {
+        # Ignore execution failures
+    }
+
+    return $null
 }
 
 # ===============================
-# Identify Backup Files
+# SEARCH FOR SQLITE3.EXE
 # ===============================
 
-# Retrieve all backed-up SQLite binaries
-$BackupFiles = Get-ChildItem `
-    -Path $BackupDir `
-    -Filter "sqlite3_*.exe" `
-    -ErrorAction SilentlyContinue
-
-# Exit if no backups are found
-if (-not $BackupFiles) {
-    Write-Log "No SQLite backup files found — nothing to roll back"
-    exit 0
-}
-
-# ===============================
-# Locate Active SQLite Installations
-# ===============================
-
-# Common directories where SQLite may be installed
 $SearchPaths = @(
     "C:\Program Files",
     "C:\Program Files (x86)",
-    "C:\Windows",
     "C:\"
 )
 
-# Locate existing sqlite3.exe files on the system
-$ActiveSQLiteFiles = Get-ChildItem `
+Write-Log "Searching for sqlite3.exe binaries"
+
+$SQLiteExecutables = Get-ChildItem `
     -Path $SearchPaths `
     -Recurse `
-    -Include "sqlite3.exe" `
+    -Filter "sqlite3.exe" `
     -ErrorAction SilentlyContinue
 
+$BackupCreated = $false
+
 # ===============================
-# Rollback Logic
+# BACKUP PROCESS
 # ===============================
 
-foreach ($ActiveFile in $ActiveSQLiteFiles) {
+foreach ($Exe in $SQLiteExecutables) {
 
-    # Log discovered SQLite binary
-    Write-Log "Evaluating SQLite binary at $($ActiveFile.FullName)"
+    $InstalledVersion = Get-SQLiteVersion $Exe.FullName
 
-    # Select the most recent backup file
-    $LatestBackup = $BackupFiles |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
+    # Skip files that cannot be evaluated
+    if (-not $InstalledVersion) { continue }
 
-    # If no backup exists, skip rollback for this file
-    if (-not $LatestBackup) {
-        Write-Log "No backup available — skipping"
-        continue
+    # Skip secure versions
+    if ($InstalledVersion -ge $MinimumSafeVersion) { continue }
+
+    Write-Log "Found vulnerable sqlite3.exe at $($Exe.FullName)"
+
+    # Generate short, safe backup filename using hash
+    $PathHash = (Get-FileHash -Algorithm SHA256 -InputStream (
+        [IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes($Exe.FullName))
+    )).Hash.Substring(0,16)
+
+    $BackupPath = "$BackupRoot\sqlite3_$PathHash.bak"
+
+    try {
+        # Create backup
+        Copy-Item -Path $Exe.FullName -Destination $BackupPath -Force
+
+        if (Test-Path $BackupPath) {
+
+            Write-Log "Backup successfully created at $BackupPath"
+
+            # Record rollback metadata
+            $RollbackManifest += [PSCustomObject]@{
+                OriginalPath    = $Exe.FullName
+                BackupPath      = $BackupPath
+                OriginalVersion = $InstalledVersion.ToString()
+                Timestamp       = (Get-Date).ToString("o")
+            }
+
+            $BackupCreated = $true
+        }
     }
-
-    # Log which backup will be restored
-    Write-Log "Restoring backup $($LatestBackup.FullName)"
-
-    # Restore the backup over the current SQLite binary
-    Copy-Item `
-        -Path $LatestBackup.FullName `
-        -Destination $ActiveFile.FullName `
-        -Force
-
-    # Log successful restore
-    Write-Log "Rollback successful for $($ActiveFile.FullName)"
+    catch {
+        Write-Log "ERROR: Failed to back up $($Exe.FullName)"
+    }
 }
 
 # ===============================
-# Script Completion
+# FINALIZE MANIFEST AND WARNINGS
 # ===============================
 
-# Log completion message
-Write-Log "SQLite rollback process completed"
+if ($BackupCreated) {
+
+    # Save rollback manifest
+    $RollbackManifest |
+        ConvertTo-Json -Depth 5 |
+        Set-Content $ManifestPath
+
+    Write-Log "Rollback manifest created successfully"
+    Write-Log "Safe to proceed with remediation script"
+}
+else {
+
+    Write-Log "No backups were created"
+    Write-Log "Likely causes:"
+    Write-Log "- No vulnerable sqlite3.exe present"
+    Write-Log "- SQLite is embedded (Python, application)"
+    Write-Log "WARNING: Remediation script will NOT be rollback-safe"
+    Write-Log "Proceed with remediation only if acceptable"
+}
