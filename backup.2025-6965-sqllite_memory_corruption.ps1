@@ -8,8 +8,8 @@
     Last Modified : 2025-12-21
     Github        : https://github.com/SantiagoX86
     Version       : 2.0
-    CVEs          : 2025-6965
-    Plugin IDs    : 242325
+    CVEs          : 2025-6965, 2025-29087, 2025-29088
+    Plugin IDs    : 242325, 240237
     STIG-ID       : N/A
 
 .TESTED ON

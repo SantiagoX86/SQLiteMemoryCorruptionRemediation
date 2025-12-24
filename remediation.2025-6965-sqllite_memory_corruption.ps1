@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    Remediates the SQLite memory corruption vulnerability (SQLite < 3.50.2)
+    Remediates multiple vulnerabilities related to SQLite versions prior to
+    3.50.2 including those for Tenable Plugins 242325 and 240237.It remediates
     by detecting old version of SQLite if an exe file exists, downloading
     a secure SQLite version, and installing the secure version on the system.
     Ensures the system is compliant even when no prior sqlite3.exe exists.
@@ -11,8 +12,8 @@
     Last Modified : 2025-12-21
     Github        : https://github.com/SantiagoX86
     Version       : 2.0
-    CVEs          : 2025-6965
-    Plugin IDs    : 242325
+    CVEs          : 2025-6965, 2025-29087, 2025-29088
+    Plugin IDs    : 242325, 240237
     STIG-ID       : N/A
 
 .TESTED ON
