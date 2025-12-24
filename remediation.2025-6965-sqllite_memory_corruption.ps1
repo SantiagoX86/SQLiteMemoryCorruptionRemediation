@@ -9,16 +9,17 @@
     Author        : Sean Santiago
     Date Created  : 2025-12-18
     Last Modified : 2025-12-21
+    Github        : https://github.com/SantiagoX86
     Version       : 2.0
     CVEs          : 2025-6965
     Plugin IDs    : 242325
     STIG-ID       : N/A
 
 .TESTED ON
-    Date(s) Tested   : 2025-12-21
-    Tested By        : Sean Santiago
-    Systems Tested   : Windows 11 Pro 24H2 (Microsoft Azure VM)
-    PowerShell Ver.  : 5.1.26100.7462
+    Date(s) Tested   : 
+    Tested By        : 
+    Systems Tested   : 
+    PowerShell Ver.  : 
 
 .USAGE
     Remediates the vulnerability regardless of whether a vulnerable sqlite3.exe

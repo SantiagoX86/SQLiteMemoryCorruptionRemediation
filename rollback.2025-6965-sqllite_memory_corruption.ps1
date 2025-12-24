@@ -7,16 +7,17 @@
     Author        : Sean Santiago
     Date Created  : 2025-12-18
     Last Modified : 2025-12-21
+    Github        : https://github.com/SantiagoX86
     Version       : 2.0
     CVEs          : 2025-6965
     Plugin IDs    : 242325
     STIG-ID       : N/A
 
 .TESTED ON
-    Date(s) Tested   : Untested due to lack of exe file on tested asset in sandbox environment
-    Tested By        : N/A
-    Systems Tested   : N/A
-    PowerShell Ver.  : N/A
+    Date(s) Tested   : 
+    Tested By        : 
+    Systems Tested   : 
+    PowerShell Ver.  : 
 
 .USAGE
     Untested as of yet as backup files were not created by backup script due to
