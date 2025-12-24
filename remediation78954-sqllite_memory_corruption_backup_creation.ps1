@@ -1,15 +1,35 @@
 <#
 .SYNOPSIS
-Creates backups and a rollback manifest prior to SQLite remediation.
+    Creates backups and a rollback manifest prior to SQLite remediation.
 
-.DESCRIPTION
-- Searches for vulnerable sqlite3.exe files
-- Creates backups if found
-- Generates a rollback manifest
-- Warns if no backup can be created
-- Hardened to handle missing directories and access errors safely
+.NOTES
+    Author        : Sean Santiago
+    Date Created  : 2025-12-18
+    Last Modified : 2025-12-21
+    Version       : 2.0
+    CVEs          : 2025-6965
+    Plugin IDs    : 242325
+    STIG-ID       : N/A
 
-Must be run as Administrator.
+.TESTED ON
+    Date(s) Tested   : 2025-12-21
+    Tested By        : Sean Santiago
+    Systems Tested   : Windows 11 Pro 24H2 (Microsoft Azure VM)
+    PowerShell Ver.  : 5.1.26100.7462
+
+.USAGE
+    The purpose of this script is to create a backup in case rollback is needed. However, if 
+    no SQLite3.exe file exists in cases such as embedded SQLite, no backups will be created. 
+    Script effectively notifies user of this situation and instructs user to proceed with 
+    caution when executing remediation script, however, testing inconclusive when SQLite.exe
+    script exists as in the sandbox in which testing occurred no exe was present. Further 
+    testing needed to verify effective creation of backup in cases in which exe exists and 
+    testing of related rollback script needed in an environment in which an exe exists.
+
+    Must be run with Administrator privileges.
+
+    Example syntax:
+        PS C:\> .\02_Remediate-SQLite-MemoryCorruption.ps1
 #>
 
 # ===============================

@@ -1,9 +1,7 @@
 <#
 .SYNOPSIS
-    Remediates the SQLite memory corruption vulnerability (SQLite < 3.50.2)
-    by detecting old version of SQLite if an exe file exists, downloading
-    a secure SQLite version, and installing the secure version on the system.
-    Ensures the system is compliant even when no prior sqlite3.exe exists.
+    Script intended to perform a rollback of SQLite Memory Corruption remediation in case
+    dependent assets are negatively affected.
 
 .NOTES
     Author        : Sean Santiago
@@ -15,16 +13,14 @@
     STIG-ID       : N/A
 
 .TESTED ON
-    Date(s) Tested   : 2025-12-21
-    Tested By        : Sean Santiago
-    Systems Tested   : Windows 11 Pro 24H2 (Microsoft Azure VM)
-    PowerShell Ver.  : 5.1.26100.7462
+    Date(s) Tested   : Untested due to lack of exe file on tested asset in sandbox environment
+    Tested By        : N/A
+    Systems Tested   : N/A
+    PowerShell Ver.  : N/A
 
 .USAGE
-    Remediates the vulnerability regardless of whether a vulnerable sqlite3.exe
-    is found. Installs SQLite if none exists. Embedded SQLite libraries
-    (e.g., Python _sqlite3.pyd or application-bundled SQLite) are logged
-    but require application-level remediation.
+    Untested as of yet as backup files were not created by backup script due to
+    non-esisting SQLite3.exe script on host machine. 
 
     Must be run with Administrator privileges.
 
